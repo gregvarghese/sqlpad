@@ -1,5 +1,6 @@
 require('../typedefs');
 const passport = require('passport');
+const appLog = require('../lib/app-log');
 const router = require('express').Router();
 
 /**
@@ -20,16 +21,26 @@ function handleOidcCallback(req, res, next) {
 
   function redirectUser(err, user) {
     if (err) {
+      appLog.debug(JSON.stringify(err));
       res.redirect(`${baseUrl}/signin`);
+      return;
     }
     if (!user) {
       res.redirect(`${baseUrl}/signin`);
+      return;
     }
     return req.logIn(user, (err) => {
       if (err) {
         res.redirect(`${baseUrl}/signin`);
+        return;
       }
-      res.redirect(`${baseUrl}`);
+      // Redirect to an empty string is illegal.
+      // Since the baseUrl option is optional we need to check that it is having a length > 0 otherwise we can trigger an illegal redirect here.
+      if (baseUrl && baseUrl.length > 0) {
+        res.redirect(`${baseUrl}`);
+      } else {
+        res.redirect(`/`);
+      }
     });
   }
 

@@ -1,5 +1,5 @@
 const consts = require('../lib/consts');
-const { Op } = require('sequelize');
+const { Op } = require('@rickbergfalk/sequelize');
 
 class ConnectionAccesses {
   /**
@@ -71,7 +71,7 @@ class ConnectionAccesses {
           },
           {
             connectionId,
-            userId: { [Op.in]: [connectionId, consts.EVERYONE_ID] },
+            userId: { [Op.in]: [userId, consts.EVERYONE_ID] },
           },
           {
             connectionId: consts.EVERY_CONNECTION_ID,

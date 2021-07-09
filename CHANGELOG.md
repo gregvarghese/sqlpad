@@ -1,5 +1,22 @@
 # Changelog
 
+## [6.7.1] - 2021-06-15
+
+- Add Trino HTTPS support
+- Fix ClickHouse authentication
+- Fix connection edit form
+- Update dependencies
+
+## [6.7.0] - 2021-06-15
+
+_Incomplete release. Use 6.7.1 instead._
+
+## [6.6.0] - 2021-04-09
+
+- Add Presto authentication and HTTPS support
+- Fix ClickHouse queries beginning with comment
+- Update Dockerfile node and package dependencies
+
 ## [6.5.0] - 2021-03-18
 
 - Add query run history side drawer
