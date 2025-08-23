@@ -1,7 +1,8 @@
 /* eslint-disable no-await-in-loop */
-const assert = require('assert');
-const clickhouse = require('./index.js');
-const testUtils = require('../test-utils.js');
+import assert from 'assert';
+
+import clickhouse from './index.js';
+import testUtils from '../test-utils.js';
 
 const connection = {
   name: 'test clickhouse',

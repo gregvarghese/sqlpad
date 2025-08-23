@@ -1,4 +1,4 @@
-import reactRefresh from '@vitejs/plugin-react-refresh';
+import react from '@vitejs/plugin-react';
 
 const sourcemap = process.env.SOURCEMAP === 'true';
 
@@ -15,7 +15,7 @@ const PROXY_ROUTES = [
   '/auth/oidc',
 ];
 
-const PROXY_URL = 'http://localhost:3010';
+const PROXY_URL = 'http://127.0.0.1:3010';
 
 const proxy: Record<string, string> = {};
 
@@ -30,7 +30,7 @@ proxy['^/.*/api/app'] = PROXY_URL;
 
 // https://vitejs.dev/config/
 const getConfig = ({ command, mode }) => {
-  let base = undefined;
+  let base: string | undefined = process.env['VITE_SPA_BASE_URL_OVERRIDE'];
 
   // command is either build or serve
   if (command === 'serve') {
@@ -39,8 +39,9 @@ const getConfig = ({ command, mode }) => {
 
   return {
     base,
-    plugins: [reactRefresh()],
+    plugins: [react()],
     server: {
+      port: 3000,
       proxy,
     },
     build: {

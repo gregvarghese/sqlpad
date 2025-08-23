@@ -1,7 +1,8 @@
-require('../typedefs');
-const router = require('express').Router();
-const mustBeAuthenticated = require('../middleware/must-be-authenticated.js');
-const wrap = require('../lib/wrap');
+import '../typedefs.js';
+import mustBeAuthenticated from '../middleware/must-be-authenticated.js';
+import wrap from '../lib/wrap.js';
+import express from 'express';
+const router = express.Router();
 
 /**
  * Get statement by id.
@@ -22,8 +23,8 @@ async function getStatement(req, res) {
   // This is not the most efficient since it gets statements again
   // Need to maybe rethink these models functions
   const batch = await models.batches.findOneById(statement.batchId);
-
-  if (batch.userId !== user.id) {
+  // ensure string comparison
+  if (batch.userId !== user.id.toString()) {
     return res.utils.forbidden();
   }
 
@@ -60,7 +61,7 @@ async function getStatementResults(req, res) {
   // Need to maybe rethink these models functions
   const batch = await models.batches.findOneById(statement.batchId);
 
-  if (batch.userId !== user.id) {
+  if (batch.userId !== user.id.toString()) {
     return res.utils.forbidden();
   }
 
@@ -74,4 +75,4 @@ router.get(
   wrap(getStatementResults)
 );
 
-module.exports = router;
+export default router;

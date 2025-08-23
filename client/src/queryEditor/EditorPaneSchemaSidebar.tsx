@@ -9,7 +9,7 @@ interface EditorPaneSchemaSidebarProps {
   children: ReactElement;
 }
 
-const EditorPaneSchemaSidebar: FunctionComponent<EditorPaneSchemaSidebarProps> = ({
+const EditorPaneSchemaSidebar = ({
   children,
   queryId,
 }: EditorPaneSchemaSidebarProps) => {
@@ -20,6 +20,7 @@ const EditorPaneSchemaSidebar: FunctionComponent<EditorPaneSchemaSidebarProps> =
   }
 
   return (
+    // @ts-expect-error SplitPane types are off
     <SplitPane
       split="vertical"
       minSize={150}

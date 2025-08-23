@@ -10,7 +10,7 @@ import { VariableSizeGrid } from 'react-window';
 import throttle from 'lodash/throttle';
 import Draggable from 'react-draggable';
 import Measure from 'react-measure';
-import { StatementColumn, StatementResults } from '../types';
+import { QueryResultFormat, StatementColumn, StatementResults } from '../types';
 import styles from './QueryResultDataTable.module.css';
 import Modal from './Modal';
 
@@ -47,6 +47,17 @@ const renderValue = (input: any, column: StatementColumn) => {
       </a>
     );
   } else {
+    // Format Markdown hyperlinks
+    if (typeof input === 'string') {
+      const mdMatch = input.match('^\\[(.*)\\]\\((https?://.*)\\)$');
+      if (mdMatch) {
+        return (
+          <a target="_blank" rel="noopener noreferrer" href={mdMatch[2]}>
+            {mdMatch[1]}
+          </a>
+        );
+      }
+    }
     return input;
   }
 };
@@ -127,6 +138,7 @@ const cellStyle: React.CSSProperties = {
 interface QueryResultDataTableProps {
   columns: StatementColumn[];
   rows?: StatementResults;
+  queryResultFormat: QueryResultFormat;
 }
 
 interface QueryResultDataTableState {
@@ -436,7 +448,7 @@ class QueryResultDataTable extends React.PureComponent<
   };
 
   render() {
-    const { columns, rows } = this.props;
+    const { columns, rows, queryResultFormat } = this.props;
     const {
       cellModalVisible,
       cellColumnName,
@@ -451,6 +463,41 @@ class QueryResultDataTable extends React.PureComponent<
       // Add extra column to fill remaining grid width if necessary
       const columnCount = columns.length + 1;
 
+      if (queryResultFormat === 'fullColumns') {
+        return (
+          <div style={{ overflow: 'auto', height: '100%' }}>
+            {rows.map((r, index) => (
+              <pre
+                key={index}
+                style={{
+                  margin: 0,
+                  padding: '10px',
+                  borderBottom:
+                    queryResultFormat === 'fullColumns'
+                      ? cellStyle.borderBottom
+                      : undefined,
+                  background: index % 2 !== 0 ? '#f9f9f9' : undefined,
+                }}
+              >
+                {columns.map(({ name }, index) => {
+                  const maxCharLength = columns.reduce(
+                    (charLength, { name }) => Math.max(name.length, charLength),
+                    0
+                  );
+                  const value = r[index];
+                  return (
+                    <div key={name}>
+                      <strong>{`${name.padStart(maxCharLength)}: `}</strong>
+                      <span>{value}</span>
+                    </div>
+                  );
+                })}
+              </pre>
+            ))}
+          </div>
+        );
+      }
+
       return (
         <Measure bounds onResize={this.handleContainerResize}>
           {({ measureRef }) => (
@@ -462,7 +509,7 @@ class QueryResultDataTable extends React.PureComponent<
                 position: 'absolute',
               }}
             >
-              {/* 
+              {/*
                 Visual hack - On Windows, scrollbar always showing in grid takes up some amount of room on side of content.
                 To account for this, the header width is reduced by scrollbar width.
                 This creates a small space in upper right corner that is unstyled.
@@ -508,9 +555,9 @@ class QueryResultDataTable extends React.PureComponent<
                 {this.Cell}
               </VariableSizeGrid>
 
-              {/* 
-                This menu is hidden and moves around based on where context-menu click happens 
-                This is hacky but works! reach-ui does not expose the menu components 
+              {/*
+                This menu is hidden and moves around based on where context-menu click happens
+                This is hacky but works! reach-ui does not expose the menu components
                 in a way that allows them to be used for context menu
               */}
               <Menu>

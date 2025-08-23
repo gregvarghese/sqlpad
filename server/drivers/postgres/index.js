@@ -1,9 +1,10 @@
-const fs = require('fs');
-const pg = require('pg');
-const sqlLimiter = require('sql-limiter');
-const SocksConnection = require('socksjs');
-const appLog = require('../../lib/app-log');
-const { formatSchemaQueryResults } = require('../utils');
+import fs from 'fs';
+import pg from 'pg';
+import sqlLimiter from 'sql-limiter';
+import SocksConnection from 'socksjs';
+import appLog from '../../lib/app-log.js';
+import { formatSchemaQueryResults } from '../utils.js';
+import { resolvePositiveNumber } from '../../lib/resolve-number.js';
 
 const id = 'postgres';
 const name = 'Postgres';
@@ -30,6 +31,11 @@ class Client {
       ssl: connection.postgresSsl,
       stream: createSocksConnection(connection),
     };
+
+    const queryTimeout = parseInt(connection.queryTimeout, 10);
+    if (queryTimeout) {
+      pgConfig.query_timeout = queryTimeout * 1000;
+    }
 
     // TODO cache key/cert values
     if (connection.postgresKey && connection.postgresCert) {
@@ -85,7 +91,12 @@ class Client {
   // It can be assumed it will only ever handle 1 statement at a time
   async runQuery(query) {
     let incomplete = false;
-    const { maxRows } = this.connection;
+
+    // Check to see if a custom maxrows is set, otherwise use default
+    const maxRows = resolvePositiveNumber(
+      this.connection.maxrows_override,
+      this.connection.maxRows
+    );
     const maxRowsPlusOne = maxRows + 1;
 
     const limitedQuery = sqlLimiter.limit(
@@ -138,7 +149,7 @@ const SCHEMA_SQL = `
     join pg_catalog.pg_namespace as ns on ns.oid = cls.relnamespace
     join pg_catalog.pg_type as tp on tp.typelem = attr.atttypid
   where 
-    cls.relkind in ('r', 'v', 'm')
+    cls.relkind in ('r', 'v', 'm', 'f')
     and ns.nspname not in ('pg_catalog', 'pg_toast', 'information_schema')
     and not attr.attisdropped 
     and attr.attnum > 0
@@ -268,9 +279,20 @@ const fields = [
     placeholder:
       'Use to enforce session variables like:\n  SET statement_timeout = 15000;\n\nDeny multiple statements per query to avoid overwritten values.',
   },
+  {
+    key: 'queryTimeout',
+    formType: 'TEXT',
+    label: 'Query Timeout (seconds)',
+  },
+  {
+    key: 'maxrows_override',
+    formType: 'TEXT',
+    label: 'Maximum rows to return',
+    description: 'Optional',
+  },
 ];
 
-module.exports = {
+export default {
   Client,
   id,
   name,

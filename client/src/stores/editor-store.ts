@@ -5,6 +5,7 @@ import {
   ChartFields,
   ConnectionClient,
   ConnectionSchema,
+  QueryResultFormat,
   Statement,
   StatementColumn,
 } from '../types';
@@ -27,7 +28,9 @@ export interface EditorSession {
   batchId?: string;
   isRunning: boolean;
   isSaving: boolean;
+  isExecutionStarting: boolean;
   saveError?: string;
+  isDriverAsynchronous: boolean;
   // Editor session takes Query model fields and flattens
   queryId?: string;
   queryName: string;
@@ -55,6 +58,7 @@ export type EditorStoreState = {
   focusedSessionId: string;
   editorSessions: Record<string, EditorSession>;
   batches: Record<string, Batch>;
+  queryResultFormat: QueryResultFormat;
   statements: Record<string, Statement>;
   schemaStates: { [conectionId: string]: SchemaState };
   getFocusedSession: () => EditorSession;
@@ -72,6 +76,8 @@ export const INITIAL_SESSION: EditorSession = {
   connectionClient: undefined,
   batchId: undefined,
   isRunning: false,
+  isExecutionStarting: false,
+  isDriverAsynchronous: false,
   isSaving: false,
   saveError: undefined,
   queryId: undefined,
@@ -103,6 +109,7 @@ export const INITIAL_STATE = {
   batches: {},
   statements: {},
   schemaStates: {},
+  queryResultFormat: 'column' as QueryResultFormat,
 };
 
 export const useEditorStore = create<EditorStoreState>((set, get) => ({
@@ -188,6 +195,10 @@ export function useSessionConnectionId(): string {
   return useEditorStore((s) => s.getFocusedSession().connectionId);
 }
 
+export function useExecutionStarting(): boolean {
+  return useEditorStore((s) => s.getFocusedSession().isExecutionStarting);
+}
+
 export function useSessionConnectionClient() {
   return useEditorStore((s) => s.getFocusedSession().connectionClient);
 }
@@ -247,6 +258,10 @@ export function useBatchError() {
     }
     return;
   });
+}
+
+export function useQueryResultFormat() {
+  return useEditorStore((s) => s.queryResultFormat);
 }
 
 export function useSessionRunQueryStartTime() {
@@ -415,4 +430,8 @@ export function useStatementText(statementId?: string) {
     }
     return s.statements[statementId]?.statementText;
   });
+}
+
+export function useSessionAsyncDriver(): boolean {
+  return useEditorStore((s) => s.getFocusedSession().isDriverAsynchronous);
 }

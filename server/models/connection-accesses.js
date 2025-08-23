@@ -1,5 +1,5 @@
-const consts = require('../lib/consts');
-const { Op } = require('sequelize');
+import consts from '../lib/consts.js';
+import { Op } from 'sequelize';
 
 class ConnectionAccesses {
   /**
@@ -71,7 +71,7 @@ class ConnectionAccesses {
           },
           {
             connectionId,
-            userId: { [Op.in]: [connectionId, consts.EVERYONE_ID] },
+            userId: { [Op.in]: [userId, consts.EVERYONE_ID] },
           },
           {
             connectionId: consts.EVERY_CONNECTION_ID,
@@ -83,6 +83,15 @@ class ConnectionAccesses {
     };
 
     return this.sequelizeDb.ConnectionAccesses.findOne({ where });
+  }
+
+  findAllActiveByUserId(userId) {
+    const where = {
+      userId: { [Op.in]: [userId, consts.EVERYONE_ID] },
+      expiryDate: { [Op.gt]: new Date() },
+    };
+
+    return this.sequelizeDb.ConnectionAccesses.findAll({ where });
   }
 
   findAllActiveByConnectionId(connectionId) {
@@ -119,4 +128,4 @@ class ConnectionAccesses {
   }
 }
 
-module.exports = ConnectionAccesses;
+export default ConnectionAccesses;

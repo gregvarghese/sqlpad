@@ -1,7 +1,8 @@
-require('../typedefs');
-const router = require('express').Router();
-const packageJson = require('../package.json');
-const wrap = require('../lib/wrap');
+import '../typedefs.js';
+import packageJson from '../server-package-json.cjs';
+import wrap from '../lib/wrap.js';
+import express from 'express';
+const router = express.Router();
 
 /**
  * @param {Req} req
@@ -9,6 +10,7 @@ const wrap = require('../lib/wrap');
  */
 async function getApp(req, res) {
   const { config } = req;
+
   const currentUser =
     req.isAuthenticated() && req.user
       ? {
@@ -27,7 +29,7 @@ async function getApp(req, res) {
       baseUrl: config.get('baseUrl'),
       defaultConnectionId: config.get('defaultConnectionId'),
       editorWordWrap: config.get('editorWordWrap'),
-      googleAuthConfigured: config.googleAuthConfigured(),
+      googleAuthConfigured: Boolean(config.googleAuthConfigured()),
       localAuthConfigured: !config.get('userpassAuthDisabled'),
       publicUrl: config.get('publicUrl'),
       samlConfigured: Boolean(config.get('samlEntryPoint')),
@@ -36,7 +38,7 @@ async function getApp(req, res) {
       ldapRolesConfigured: Boolean(
         config.get('ldapRoleAdminFilter') || config.get('ldapRoleEditorFilter')
       ),
-      oidcConfigured: config.oidcLegacyConfigured() || config.oidcConfigured(),
+      oidcConfigured: config.oidcConfigured(),
       oidcLinkHtml: config.get('oidcLinkHtml'),
       showServiceTokensUI: Boolean(config.get('serviceTokenSecret')),
     },
@@ -49,4 +51,4 @@ async function getApp(req, res) {
 // the root of a domain or if there is a base-url provided in the config
 router.get('*/api/app', wrap(getApp));
 
-module.exports = router;
+export default router;

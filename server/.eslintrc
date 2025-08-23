@@ -1,9 +1,16 @@
 {
-  "extends": ["airbnb-base", "plugin:prettier/recommended"],
+  "extends": ["airbnb-base", "prettier"],
   "env": {
+    "es6": true,
+    "node": true,
     "mocha": true
   },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  },
   "rules": {
+    "import/prefer-default-export": "off",
+    "import/extensions": "off",
     "camelcase": "off",
     "consistent-return": "off",
     "dot-notation": "off",
@@ -28,7 +35,11 @@
     "prefer-destructuring": "off",
     "prefer-promise-reject-errors": "off",
     "prefer-template": "off",
+    "prefer-arrow-callback": "off",
+    "arrow-body-style": "off",
     "radix": "off",
-    "vars-on-top": "off"
+    "vars-on-top": "off",
+    "prefer-regex-literals": "off",
+    "no-promise-executor-return": "off"
   }
 }

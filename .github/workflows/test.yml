@@ -2,6 +2,9 @@ name: test
 
 on: [push, pull_request]
 
+env:
+  TZ: utc
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -12,13 +15,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [12.x, 14.x, 15.x]
+        node-version: [20.x, 22.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
@@ -26,47 +29,47 @@ jobs:
         run: scripts/build.sh
 
       - name: Store artifacts
-        uses: actions/upload-artifact@v1
+        uses: actions/upload-artifact@v4
         with:
           name: built_node${{ matrix.node-version }}
           path: server/public
 
   test:
     needs: build
-    runs-on: ubuntu-20.04
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     strategy:
       fail-fast: false # if one job fails, others will not be aborted
       matrix:
         backendtype: ['', 'mssql', 'mysql', 'mariadb', 'postgres']
-        node-version: [12.x, 14.x, 15.x]
+        node-version: [20.x, 22.x]
 
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v4
 
       - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
 
       - name: Start redis
-        run: docker-compose -f server/docker-compose.yml up -d redis &
+        run: docker compose -f server/docker-compose.yml up -d redis &
 
       - name: Start ldap
-        run: docker-compose -f server/docker-compose.yml up -d ldap &
+        run: docker compose -f server/docker-compose.yml up -d ldap &
 
       - name: Start service for backend server
         if: ${{ matrix.backendtype }}
-        run: docker-compose -f server/docker-compose.yml up -d ${{ matrix.backendtype }} &
+        run: docker compose -f server/docker-compose.yml up -d ${{ matrix.backendtype }} &
 
       - name: Install node modules
-        run: npm ci --prefix server
+        run: (cd server && yarn)
 
       - name: Download built artifacts
-        uses: actions/download-artifact@v1
+        uses: actions/download-artifact@v4
         with:
-          name: built_node${{ matrix.node-version }}
+          artifact-ids: ${{ needs.build.outputs.artifact-id }}
           path: server/public
 
       - name: Verify backend DB service is healthy before starting

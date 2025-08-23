@@ -25,9 +25,19 @@ const configItems = [
     default: 'secret-used-to-sign-cookies-please-set-and-make-strong',
   },
   {
+    key: 'cookieSecure',
+    envVar: 'SQLPAD_COOKIE_SECURE',
+    default: false,
+  },
+  {
     key: 'sessionMinutes',
     envVar: 'SQLPAD_SESSION_MINUTES',
     default: 60,
+  },
+  {
+    key: 'sessionCookieSameSite',
+    envVar: 'SQLPAD_SESSION_COOKIE_SAME_SITE',
+    default: 'strict',
   },
   {
     key: 'sessionStore',
@@ -118,6 +128,11 @@ const configItems = [
     key: 'googleClientSecret',
     envVar: 'SQLPAD_GOOGLE_CLIENT_SECRET',
     default: '',
+  },
+  {
+    key: 'googleDefaultRole',
+    envVar: 'SQLPAD_GOOGLE_DEFAULT_ROLE',
+    default: 'editor',
   },
   {
     key: 'publicUrl',
@@ -255,6 +270,16 @@ const configItems = [
     default: 'editor',
   },
   {
+    key: 'samlAdminGroup',
+    envVar: 'SQLPAD_SAML_ADMIN_GROUP',
+    default: '',
+  },
+  {
+    key: 'samlEnforcedRole',
+    envVar: 'SQLPAD_SAML_ENFORCED_ROLE',
+    default: false,
+  },
+  {
     key: 'allowConnectionAccessToEveryone',
     envVar: 'SQLPAD_ALLOW_CONNECTION_ACCESS_TO_EVERYONE',
     default: true,
@@ -298,6 +323,12 @@ const configItems = [
     key: 'seedDataPath',
     envVar: 'SQLPAD_SEED_DATA_PATH',
     default: '',
+  },
+  // https://expressjs.com/en/guide/behind-proxies.html
+  {
+    key: 'trustProxy',
+    envVar: 'SQLPAD_TRUST_PROXY',
+    default: false,
   },
   {
     key: 'authProxyEnabled',
@@ -359,6 +390,11 @@ const configItems = [
     default: 'Sign in with OpenID',
   },
   {
+    key: 'oidcScope',
+    envVar: 'SQLPAD_OIDC_SCOPE',
+    default: 'openid profile email roles',
+  },
+  {
     key: 'webhookEnabled',
     envVar: 'SQLPAD_WEBHOOK_ENABLED',
     default: false,
@@ -406,4 +442,4 @@ const configItems = [
   },
 ];
 
-module.exports = configItems;
+export default configItems;

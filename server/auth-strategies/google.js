@@ -1,7 +1,7 @@
-const passport = require('passport');
-const PassportGoogleStrategy = require('passport-google-oauth20').Strategy;
-const appLog = require('../lib/app-log');
-const checkAllowedDomains = require('../lib/check-allowed-domains.js');
+import passport from 'passport';
+import { Strategy as PassportGoogleStrategy } from 'passport-google-oauth20';
+import appLog from '../lib/app-log.js';
+import checkAllowedDomains from '../lib/check-allowed-domains.js';
 
 async function passportGoogleStrategyHandler(
   req,
@@ -34,9 +34,23 @@ async function passportGoogleStrategyHandler(
     }
     const allowedDomains = config.get('allowedDomains');
     if (checkAllowedDomains(allowedDomains, email)) {
+      // Derive what the googleDefaultRole should be from config
+      // Value in config could be `editor` or `admin`
+      let googleDefaultRole = config
+        .get('googleDefaultRole')
+        .toLowerCase()
+        .trim();
+
+      // @TODO: Consider getting the role from the Google callback?
+      // @TODO: Unify the default role handlers across different auth strategies.
+      const validRoles = new Set(['editor', 'admin']);
+      if (!validRoles.has(googleDefaultRole)) {
+        googleDefaultRole = 'editor';
+      }
+
       const newUser = await models.users.create({
         email,
-        role: 'editor',
+        role: googleDefaultRole,
         signupAt: new Date(),
       });
       webhooks.userCreated(newUser);
@@ -82,4 +96,4 @@ function enableGoogle(config) {
   }
 }
 
-module.exports = enableGoogle;
+export default enableGoogle;

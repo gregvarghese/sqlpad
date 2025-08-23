@@ -1,5 +1,5 @@
-const passhash = require('../lib/passhash.js');
-const ensureJson = require('./ensure-json.js');
+import passhash from '../lib/passhash.js';
+import ensureJson from './ensure-json.js';
 
 class Users {
   /**
@@ -110,4 +110,4 @@ class Users {
   }
 }
 
-module.exports = Users;
+export default Users;

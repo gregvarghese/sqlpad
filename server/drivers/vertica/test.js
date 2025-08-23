@@ -1,6 +1,6 @@
-const assert = require('assert');
-const testUtils = require('../test-utils.js');
-const vertica = require('./index.js');
+import assert from 'assert';
+import testUtils from '../test-utils.js';
+import vertica from './index.js';
 
 const connection = {
   name: 'test vertica',

@@ -1,8 +1,10 @@
-require('../typedefs');
-const router = require('express').Router();
-const mustBeAdmin = require('../middleware/must-be-admin.js');
-const mustBeAuthenticated = require('../middleware/must-be-authenticated.js');
-const wrap = require('../lib/wrap');
+import '../typedefs.js';
+import mustBeAdmin from '../middleware/must-be-admin.js';
+import mustBeAuthenticated from '../middleware/must-be-authenticated.js';
+import wrap from '../lib/wrap.js';
+import consts from '../lib/consts.js';
+import express from 'express';
+const router = express.Router();
 
 function removePassword(connection) {
   connection.password = '';
@@ -13,12 +15,31 @@ function removePassword(connection) {
 }
 
 /**
+ * Lists only connections that are available to the user.
+ * TODO MAJOR BREAKING - for next major version, remove all connection data other than name, driver, dates created
+ *
  * @param {Req} req
  * @param {Res} res
  */
 async function listConnections(req, res) {
   const { models } = req;
-  const connections = await models.connections.findAll();
+  let [connections, access] = await Promise.all([
+    models.connections.findAll(),
+    models.connectionAccesses.findAllActiveByUserId(req.user.id),
+  ]);
+
+  connections = connections.map((connection) => removePassword(connection));
+
+  // Admins have access to all connections.
+  if (req.user.role !== 'admin') {
+    // map access to a set of connection ids
+    access = new Set(access.map((e) => e.connectionId));
+    // If all connections are allowed by this magic id, we can show all and don't need to filter the list.
+    if (!access.has(consts.EVERY_CONNECTION_ID)) {
+      // if not all are allowed then we filter each connection and check that it is in the access list.
+      connections = connections.filter((e) => access.has(e.id));
+    }
+  }
   return res.utils.data(connections);
 }
 
@@ -80,4 +101,4 @@ router.post('/api/connections', mustBeAdmin, wrap(createConnection));
 router.put('/api/connections/:id', mustBeAdmin, wrap(updateConnection));
 router.delete('/api/connections/:id', mustBeAdmin, wrap(deleteConnection));
 
-module.exports = router;
+export default router;

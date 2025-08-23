@@ -1,5 +1,205 @@
 # Changelog
 
+## [7.5.7] - 2025-08-21
+
+- Revert client dependency updates
+- Prep repo for archival
+
+## [7.5.6] - 2025-07-26
+
+- Update Google bigquery driver
+
+## [7.5.5] - 2025-07-25
+
+- Update dependencies (minor and patch)
+
+## [7.5.4] - 2025-06-09
+
+- Update dependencies
+
+## [7.5.3] - 2025-03-23
+
+- Update dependencies
+
+## [7.5.2] - 2024-12-19
+
+- Update dependencies
+
+## [7.5.1] - 2024-09-31
+
+- Update ClickHouse driver: ClickHouse 23.3 or later supported
+- Update dependencies
+
+## [7.5.0] - 2024-08-25
+
+- Node 20 or later required
+- Update dependencies
+
+## [7.4.4] - 2024-07-21
+
+- Update dependencies
+
+## [7.4.3] - 2024-05-12
+
+- Update dependencies
+
+## [7.4.2] - 2024-04-24
+
+- Update dependencies
+
+## [7.4.1] - 2024-02-24
+
+- Update dependencies
+
+## [7.4.0] - 2024-02-03
+
+- Node 18 required
+- Show incomplete on truncated response from BigQuery (#1224)
+- Update dependencies
+
+## [7.3.1] - 2024-01-30
+
+- Revert odbc implementation to CJS
+
+## [7.3.0] - 2024-01-27
+
+- Restore arm64 container build
+- Convert server code to ESM
+
+## [7.2.0] - 2023-12-23
+
+- Add extra result display formats and copy-to-clipboard (#1209)
+- Fix helm chart postgres dependency (#1212)
+- Fix BigQuery indexes schema panel (#1214)
+
+## [7.1.3] - 2023-10-29
+
+- Update dependencies
+
+## [7.1.2] - 2023-08-16
+
+- Revert dockerfile node version to node 16
+
+## [7.1.1] - 2023-08-09
+
+- Update dependencies
+
+## [7.1.0] - 2023-06-18
+
+- [Remove snowflake support](https://github.com/sqlpad/sqlpad/pull/1191)
+- Fix docker-entrypoint script to allow setting env vars [#1192](https://github.com/sqlpad/sqlpad/pull/1192)
+- Update dependencies
+
+## [7.0.5] - 2023-05-02
+
+- Update dependencies
+
+## [7.0.4] - 2023-04-22
+
+- Update dependencies
+
+## [7.0.3] - 2023-03-19
+
+- Updates clickhouse implementation to [official nodejs driver](https://clickhouse.com/docs/en/integrations/language-clients/nodejs). At time of release, compatible Clickhouse versions are 22.8 - 23.2.
+- Updates dependencies
+
+## [7.0.2] - 2023-03-06
+
+- Update dependencies
+
+## [7.0.1] - 2023-02-21
+
+- Add "Trust Server Cert" option for SQL Server connections
+- Update dependencies (minor and patch)
+
+## [7.0.0] - 2022-12-03
+
+- Update dependencies - potentially breaking changes for auth due to dependency updates.
+- Change in versioning scheme. Semver will no longer be followed.
+
+## [6.11.4] - 2022-12-02
+
+- Update dependencies
+
+## [6.11.3] - 2022-11-16
+
+- Update dependencies
+
+## [6.11.2] - 2022-09-25
+
+- Update dependencies
+
+## [6.11.1] - 2022-06-07
+
+- Remove connection password from connection list API. This matches the behavior for connection detail API.
+- Update dependencies
+
+## [6.11.0] - 2022-04-12
+
+- Add max rows override for ODBC, Athena, MySQL, Postgres, Snowflake, and SQL Server drivers
+
+## [6.10.1] - 2022-03-13
+
+- Secure connection template functionality.
+  This restricts connection template values to fields on user object, preventing the use of arbitrary JavaScript, as it could be leveraged for abuse. (This functionality was, and still is, only available to `admin` accounts.)
+
+## [6.10.0] - 2022-03-11
+
+- Add postgres query timeout config
+- Add default role config for Google Auth
+- Update dependencies
+
+## [6.9.0] - 2022-02-05
+
+- Add cookie security configuration options
+- Limit listed connections based on user access
+- Add SAML based role management
+- Postgres: Add foreign tables to schema
+- Athena: Fix athena region configuration
+- Athena: Add support reading schema from glue
+- MySQL: Allow base64 for SSL
+- Fix migrations to be MySQL 5.7 safe
+- Update dependencies
+
+## [6.8.1] - 2021-09-05
+
+- Prevent disclosure of Google OAuth secret
+- Fix Athena drop/create table query support
+
+## [6.8.0] - 2021-08-31
+
+- Add support for 0000-00-00 date strings in MySQL
+- Add MySQL column descriptions
+- Add AWS Athena support
+- Add cancellable query support to AWS Athena connection
+- Add Azure AD support to OIDC auth
+- Allow role to be assigned via OIDC user role
+- Add ODBC support to docker container (see `docker-examples/oracle-odbc-image` for example)
+- Render markdown hyperlinks in query result columns
+- Sort schema and table on name
+- Polish schema search and default expanded behaviors
+- Add compression to schema route payload
+- Fix search history
+- Fix OIDC illegal redirects
+- Fix `/api/batches` forbidden response when using API key
+
+## [6.7.1] - 2021-06-15
+
+- Add Trino HTTPS support
+- Fix ClickHouse authentication
+- Fix connection edit form
+- Update dependencies
+
+## [6.7.0] - 2021-06-15
+
+_Incomplete release. Use 6.7.1 instead._
+
+## [6.6.0] - 2021-04-09
+
+- Add Presto authentication and HTTPS support
+- Fix ClickHouse queries beginning with comment
+- Update Dockerfile node and package dependencies
+
 ## [6.5.0] - 2021-03-18
 
 - Add query run history side drawer
@@ -168,7 +368,7 @@ _accidentally tagged without changes_
 ## [5.8.1] - 2020-10-23
 
 - Fix LDAP editor role search filter
-- Allow empty/`denied` value for `SQLPAD_LDAP_DEFAULT_ROLE` to deny users that do not match LDAP role filters. See [LDAP documentation](http://sqlpad.github.io/sqlpad/#/authentication?id=ldap-experimental) for more info.
+- Allow empty/`denied` value for `SQLPAD_LDAP_DEFAULT_ROLE` to deny users that do not match LDAP role filters. See [LDAP documentation](http://sqlpad.github.io/#/authentication?id=ldap-experimental) for more info.
 
 ## [5.8.0] - 2020-10-22
 
@@ -199,13 +399,13 @@ _accidentally tagged without changes_
 
 ## [5.4.0] - 2020-08-03
 
-- Add configurable query result store (memory, database, and redis now an option). See `SQLPAD_QUERY_RESULT_STORE` under [configuration](https://sqlpad.github.io/sqlpad/#/configuration) docs.
+- Add configurable query result store (memory, database, and redis now an option). See `SQLPAD_QUERY_RESULT_STORE` under [configuration](https://sqlpad.github.io/#/configuration) docs.
 - Update MySQL connections to use INTERACTIVE flag to prevent early connection close.
 
 ## [5.3.0] - 2020-07-31
 
 - Embolden result column headers
-- Add configurable session store (memory, database, and redis now an option). See `SQLPAD_SESSION_STORE` under [configuration](https://sqlpad.github.io/sqlpad/#/configuration) docs.
+- Add configurable session store (memory, database, and redis now an option). See `SQLPAD_SESSION_STORE` under [configuration](https://sqlpad.github.io/#/configuration) docs.
 - Update server dependencies
 
 ## [5.2.1] - 2020-07-27
@@ -219,7 +419,7 @@ This release introduces new generic webhooks for a variety of events, while depr
 
 The webhooks added support a larger number of events than previously handled, such as queries being run and results/error received from those queries.
 
-- Add webhooks [documentation](http://sqlpad.github.io/sqlpad/#/webhooks)
+- Add webhooks [documentation](http://sqlpad.github.io/#/webhooks)
 - Deprecate SMTP email and Slack webhook, both to be removed in v6.
 - Capture database error message on ODBC driver connection error
 - Show service token UI only if enabled via config (#787)
@@ -293,7 +493,7 @@ Special thanks to @eladeyal-intel, @bruth, @yorek, @dengc367, @murphyke, and @Wi
 
 - Test connection error shown
 
-- New `/batches` API for running multi-statement SQL. This replaces `/query-result` API, and is written in a more RESTful approach, removing the need to extend SQLPad timeouts. See [API docs](http://sqlpad.github.io/sqlpad/#/api-batches) for more info.
+- New `/batches` API for running multi-statement SQL. This replaces `/query-result` API, and is written in a more RESTful approach, removing the need to extend SQLPad timeouts. See [API docs](http://sqlpad.github.io/#/api-batches) for more info.
 
 - Adds `allowedDomains` config item and deprecates `whitelistedDomains` to be removed in v6.
 
@@ -303,7 +503,7 @@ Special thanks to @eladeyal-intel, @bruth, @yorek, @dengc367, @murphyke, and @Wi
 
 - `denyMultipleStatements` connection option removed. Multiple statements are now attempted to be supported at SQLPad REST API level via `batches` and `statements` API.
 
-- `/download-results/` API has been removed in favor of `/statement-results/`, which is similar but based on `statementId` instead of `cacheKey`. See [API docs](http://sqlpad.github.io/sqlpad/#/api-batches) for more info.
+- `/download-results/` API has been removed in favor of `/statement-results/`, which is similar but based on `statementId` instead of `cacheKey`. See [API docs](http://sqlpad.github.io/#/api-batches) for more info.
 
 - `debug` config option removed. Use `appLogLevel` set to `debug` instead.
 
@@ -348,33 +548,33 @@ Special thanks to @eladeyal-intel, @bruth, @yorek, @dengc367, @murphyke, and @Wi
 
 ### Features
 
-- Add Google BigQuery support [documentation](https://sqlpad.github.io/sqlpad/#/connections?id=bigquery)
+- Add Google BigQuery support [documentation](https://sqlpad.github.io/#/connections?id=bigquery)
 
-- Add SQLite support [documentation](https://sqlpad.github.io/sqlpad/#/connections?id=sqlite)
+- Add SQLite support [documentation](https://sqlpad.github.io/#/connections?id=sqlite)
 
 - Adds batch query support to ODBC (last statement is shown in UI)
 
-- Auth: Add option to disable authentication. [documentation](https://sqlpad.github.io/sqlpad/#/authentication?id=no-authentication)
+- Auth: Add option to disable authentication. [documentation](https://sqlpad.github.io/#/authentication?id=no-authentication)
 
   When auth is disabled, application no longer requires authentication.
 
-- Auth: Add proxy authentication support. [documentation](https://sqlpad.github.io/sqlpad/#/authentication?id=auth-proxy)
+- Auth: Add proxy authentication support. [documentation](https://sqlpad.github.io/#/authentication?id=auth-proxy)
 
 - Add private/shared query model.
 
   Going forward queries are _private_ by default. When sharing is enabled, query is shared with all users (and they are given write permissions). Finer-grained access to be added in the future (share with specific user, read vs write)
 
-- Add connection and query seed data support [documentation](https://sqlpad.github.io/sqlpad/#/seed-data)
+- Add connection and query seed data support [documentation](https://sqlpad.github.io/#/seed-data)
 
 - Add service tokens (api tokens). New menu option is available when logged in as admin.
 
 - Add application header for application-level administration
 
-- Adds multi-statement transaction support for Postgres, SQLite, and ODBC. [documentation](https://sqlpad.github.io/sqlpad/#/connections?id=multi-statement-transaction-support)
+- Adds multi-statement transaction support for Postgres, SQLite, and ODBC. [documentation](https://sqlpad.github.io/#/connections?id=multi-statement-transaction-support)
 
 - Add config deprecation for following keys: `debug`, `tableChartLinksRequireAuth`, `keyPath`, `certPath`, `certPassphrase`
 
-- Add connection template support [documentation](https://sqlpad.github.io/sqlpad/#/connection-templates)
+- Add connection template support [documentation](https://sqlpad.github.io/#/connection-templates)
 
 - Adds additional query run logging for queries executed and details surrounding them (logged under `info` level)
 

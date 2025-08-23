@@ -1,7 +1,9 @@
-const assert = require('assert').strict;
-const path = require('path');
-const TestUtils = require('../utils');
-const ConnectionClient = require('../../lib/connection-client');
+import { strict as assert } from 'assert';
+import path from 'path';
+import TestUtils from '../utils.js';
+import ConnectionClient from '../../lib/connection-client.js';
+import { v4 as uuidv4 } from 'uuid';
+import serverDirname from '../../server-dirname.cjs';
 
 function wait(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -19,8 +21,8 @@ describe('lib/connection-clients', function () {
       name: 'connection-client-test',
       data: {
         filename: path.join(
-          __dirname,
-          '../artifacts/connection-client-test.sqlite'
+          serverDirname,
+          'test/artifacts/connection-client-test.sqlite'
         ),
       },
       idleTimeoutSeconds: 1,
@@ -105,5 +107,28 @@ describe('lib/connection-clients', function () {
     await wait(300);
     connectionClient.keepAlive();
     assert(!connectionClient.isConnected());
+  });
+
+  it('Throws an error when starting an async query with unsupported driver', async function () {
+    const connectionClient = new ConnectionClient(
+      connection1,
+      utils.users.admin
+    );
+    await assert.rejects(
+      connectionClient.startQueryExecution({}),
+      new Error('Driver SQLite does not support async queries')
+    );
+  });
+
+  it('Throws an error when cancelling an async query with unsupported driver', async function () {
+    const connectionClient = new ConnectionClient(
+      connection1,
+      utils.users.admin
+    );
+
+    await assert.rejects(
+      connectionClient.cancelQuery(uuidv4()),
+      new Error('Driver SQLite does not support cancellation of queries')
+    );
   });
 });

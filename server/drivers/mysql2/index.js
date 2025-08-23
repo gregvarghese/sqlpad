@@ -1,8 +1,9 @@
-const fs = require('fs');
-const mysql = require('mysql2/promise');
-const appLog = require('../../lib/app-log');
-const sqlLimiter = require('sql-limiter');
-const { formatSchemaQueryResults } = require('../utils');
+import fs from 'fs';
+import mysql from 'mysql2/promise';
+import appLog from '../../lib/app-log.js';
+import sqlLimiter from 'sql-limiter';
+import { formatSchemaQueryResults } from '../utils.js';
+import { resolvePositiveNumber } from '../../lib/resolve-number.js';
 
 const id = 'mysql2';
 const name = 'MySQL2';
@@ -20,7 +21,8 @@ function getSchemaSql(database) {
       t.table_schema, 
       t.table_name, 
       c.column_name, 
-      c.data_type
+      c.data_type,
+      c.column_comment as column_description
     FROM 
       INFORMATION_SCHEMA.TABLES t 
       JOIN INFORMATION_SCHEMA.COLUMNS c ON t.table_schema = c.table_schema AND t.table_name = c.table_name 
@@ -30,6 +32,18 @@ function getSchemaSql(database) {
       t.table_name, 
       c.ordinal_position
   `;
+}
+
+const BASE64_PREFIX = 'base64:';
+/**
+ * If the path starts with the base64 prefix it will create a buffer from the base64 string
+ * @param {string} path
+ */
+function loadData(path) {
+  if (path.startsWith(BASE64_PREFIX)) {
+    return Buffer.from(path.substring(BASE64_PREFIX.length), 'base64');
+  }
+  return fs.readFileSync(path);
 }
 
 class Client {
@@ -53,18 +67,19 @@ class Client {
       timezone: 'Z',
       supportBigNumbers: true,
       flags: '+INTERACTIVE',
+      dateStrings: true,
     };
     if (connection.mysqlSsl) {
       myConfig.ssl = {};
       // TODO cache key/cert values
       if (connection.mysqlKey && connection.mysqlCert) {
         myConfig.ssl = {
-          key: fs.readFileSync(connection.mysqlKey),
-          cert: fs.readFileSync(connection.mysqlCert),
+          key: loadData(connection.mysqlKey),
+          cert: loadData(connection.mysqlCert),
         };
       }
       if (connection.mysqlCA) {
-        myConfig.ssl['ca'] = fs.readFileSync(connection.mysqlCA);
+        myConfig.ssl['ca'] = loadData(connection.mysqlCA);
       }
       if (connection.minTlsVersion) {
         myConfig.ssl['minVersion'] = connection.minTlsVersion;
@@ -104,7 +119,11 @@ class Client {
       throw new Error('Must be connected');
     }
 
-    const { maxRows } = this.connection;
+    // Check to see if a custom maxrows is set, otherwise use default
+    const maxRows = resolvePositiveNumber(
+      this.connection.maxrows_override,
+      this.connection.maxRows
+    );
     const maxRowsPlusOne = maxRows + 1;
     const limitedQuery = sqlLimiter.limit(
       query,
@@ -229,9 +248,15 @@ const fields = [
     formType: 'CHECKBOX',
     label: 'Use old/insecure pre 4.1 Auth System',
   },
+  {
+    key: 'maxrows_override',
+    formType: 'TEXT',
+    label: 'Maximum rows to return',
+    description: 'Optional',
+  },
 ];
 
-module.exports = {
+export default {
   id,
   name,
   fields,

@@ -1,14 +1,14 @@
-const { DataTypes } = require('sequelize');
+import { DataTypes } from 'sequelize';
 
-module.exports = function (sequelize) {
+export default function (sequelize) {
   // An entry in this table gives access to a query for a user_id, user_email, or group_id
   const ServiceTokens = sequelize.define(
     'ServiceTokens',
     {
       id: {
-        type: DataTypes.INTEGER,
-        autoIncrement: true,
+        type: DataTypes.STRING,
         primaryKey: true,
+        defaultValue: DataTypes.UUIDV4,
       },
       name: {
         type: DataTypes.STRING,
@@ -48,4 +48,4 @@ module.exports = function (sequelize) {
   );
 
   return ServiceTokens;
-};
+}

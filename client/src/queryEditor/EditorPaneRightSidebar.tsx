@@ -12,7 +12,7 @@ interface EditorPaneRightSidebarProps {
   children: ReactElement;
 }
 
-const EditorPaneRightSidebar: FunctionComponent<EditorPaneRightSidebarProps> = ({
+const EditorPaneRightSidebar = ({
   children,
   queryId,
 }: EditorPaneRightSidebarProps) => {
@@ -36,6 +36,7 @@ const EditorPaneRightSidebar: FunctionComponent<EditorPaneRightSidebarProps> = (
   }
 
   return (
+    // @ts-expect-error SplitPane types are off
     <SplitPane
       split="vertical"
       primary="second"

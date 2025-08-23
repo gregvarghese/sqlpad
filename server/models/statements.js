@@ -1,13 +1,14 @@
 /* eslint-disable no-await-in-loop */
-const util = require('util');
-const path = require('path');
-const fs = require('fs');
-const mkdirp = require('mkdirp');
-const { promisify } = require('util');
-const LRU = require('lru-cache');
-const redis = require('redis');
-const { Op } = require('sequelize');
-const ensureJson = require('./ensure-json');
+import util from 'util';
+
+import path from 'path';
+import fs from 'fs';
+import { mkdirp } from 'mkdirp';
+import { LRUCache } from 'lru-cache';
+import redis from 'redis';
+import { Op } from 'sequelize';
+import ensureJson from './ensure-json.js';
+import appLog from '../lib/app-log.js';
 const writeFile = util.promisify(fs.writeFile);
 const readFile = util.promisify(fs.readFile);
 const unlink = util.promisify(fs.unlink);
@@ -28,15 +29,13 @@ class Statements {
     this.queryResultStore = config.get('queryResultStore');
 
     if (this.queryResultStore === 'redis') {
-      const client = redis.createClient(config.get('redisUri'));
+      const client = redis.createClient({ url: config.get('redisUri') });
+      client.connect().catch((error) => appLog.error(error));
       this.redisClient = client;
-      this.redisGetAsync = promisify(client.get).bind(client);
-      this.redisSetexAsync = promisify(client.setex).bind(client);
-      this.redisDelAsync = promisify(client.del).bind(client);
     }
 
     if (this.queryResultStore === 'memory') {
-      this.memoryCache = new LRU({ max: 1000, maxAge: 1000 * 60 * 60 });
+      this.memoryCache = new LRUCache({ max: 1000, ttl: 1000 * 60 * 60 });
     }
   }
 
@@ -107,11 +106,11 @@ class Statements {
     }
 
     if (this.isRedisStore()) {
-      await this.redisDelAsync(redisDbKey(id));
+      await this.redisClient.del(redisDbKey(id));
     }
 
     if (this.isMemoryStore()) {
-      this.memoryCache.del(id);
+      this.memoryCache.delete(id);
     }
 
     if (this.isDatabaseStore()) {
@@ -149,6 +148,17 @@ class Statements {
     );
   }
 
+  async updateCancelled(id, stopTime, durationMs) {
+    const update = {
+      status: 'cancelled',
+      stopTime,
+      durationMs,
+    };
+
+    await this.sequelizeDb.Statements.update(update, { where: { id } });
+    return this.findOneById(id);
+  }
+
   async updateFinished(id, queryResult, stopTime, durationMs) {
     const { config } = this;
     const dbPath = config.get('dbPath');
@@ -178,7 +188,7 @@ class Statements {
         if (!seconds || seconds <= 0) {
           seconds = 60 * 60;
         }
-        await this.redisSetexAsync(
+        await this.redisClient.setEx(
           redisDbKey(id),
           seconds,
           JSON.stringify(arrOfArr)
@@ -251,7 +261,7 @@ class Statements {
     }
 
     if (this.isRedisStore()) {
-      const json = await this.redisGetAsync(redisDbKey(statement.id));
+      const json = await this.redisClient.get(redisDbKey(statement.id));
       if (json) {
         const parsed = JSON.parse(json);
         if (Array.isArray(parsed)) {
@@ -298,6 +308,14 @@ class Statements {
       await this.removeById(statement.id);
     }
   }
+
+  async updateExecutionId(id, executionId) {
+    const update = {
+      executionId,
+    };
+    await this.sequelizeDb.Statements.update(update, { where: { id } });
+    return this.findOneById(id);
+  }
 }
 
-module.exports = Statements;
+export default Statements;

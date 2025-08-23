@@ -32,7 +32,7 @@ import searchSchemaInfo from './searchSchemaInfo';
 const ICON_SIZE = 22;
 const ICON_STYLE = { marginBottom: -6, marginRight: 0, marginLeft: -6 };
 
-function formatIdentifiers(s: string, quoteChars: string = '') {
+function formatIdentifiers(s: string, quoteChars = '') {
   const leftQuote = quoteChars[0] || '';
   const rightQuote = quoteChars[1] || quoteChars[0] || '';
 
@@ -121,11 +121,12 @@ function SchemaSidebar() {
     const expandable = row.type === 'schema' || row.type === 'table';
     if (expandable) {
       classNames.push(styles.expandable);
-      icon = expanded[row.id] ? (
-        <OpenIcon size={ICON_SIZE} style={ICON_STYLE} />
-      ) : (
-        <ClosedIcon size={ICON_SIZE} style={ICON_STYLE} />
-      );
+      icon =
+        expanded[row.id] === true ? (
+          <OpenIcon size={ICON_SIZE} style={ICON_STYLE} />
+        ) : (
+          <ClosedIcon size={ICON_SIZE} style={ICON_STYLE} />
+        );
     }
 
     const indentationPadding = row.level * 20 + (!expandable ? 10 : 0);
@@ -197,7 +198,7 @@ function SchemaSidebar() {
         <SpinKitCube />
       </div>
     );
-  } else if (true) {
+  } else {
     content = (
       <ul style={{ paddingLeft: 0 }}>
         <List

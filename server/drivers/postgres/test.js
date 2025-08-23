@@ -1,6 +1,6 @@
-const assert = require('assert');
-const testUtils = require('../test-utils.js');
-const postgres = require('./index.js');
+import assert from 'assert';
+import testUtils from '../test-utils.js';
+import postgres from './index.js';
 
 const connection = {
   name: 'test postgres',

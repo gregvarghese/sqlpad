@@ -2,13 +2,14 @@
 
 ## Prerequisites
 
-- [Node](https://nodejs.org) installed at v12.0.0+
+- [Node](https://nodejs.org) installed at v14.0.0+
+- [Yarn 1 (classic yarn)](https://classic.yarnpkg.com/lang/en/)
 - Some dependencies may require compilation. On macOS, the Xcode Command Line Tools should be installed. On Ubuntu, `apt-get install build-essential` will install the required packages. Similar commands should work on other Linux distros. Windows will require some additional steps, see the [`node-gyp` installation instructions](https://github.com/nodejs/node-gyp#installation) for details.
 
 ## Style Guide
 
 SQLPad uses an automatic code formatter called [Prettier](https://prettier.io/) and a linting tool called ESLint.
-Run `npm run lint` after making any changes to code to check formatting and lint. Some formatting and lint may be fixed automatically by running `npm run fixlint`.
+Run `yarn run lint` after making any changes to code to check formatting and lint. Some formatting and lint may be fixed automatically by running `yarn run fixlint`.
 
 If using Visual Studio Code, Prettier and ESLint extensions can be installed to assist in detecting and fixing issues during development.
 
@@ -25,15 +26,15 @@ If using Visual Studio Code, Prettier and ESLint extensions can be installed to 
 
   ```sh
   # install root level dependencies using package-lock.json as reference
-  npm ci
+  yarn
   # install front-end dependencies using package-lock.json
   cd client
-  npm ci
+  yarn
   # build front-end
-  npm run build
+  yarn build
   # install back-end dependencies
   cd ../server
-  npm ci
+  yarn
   cd ..
   # copy client build to server directory
   mkdir server/public
@@ -69,13 +70,15 @@ Open 2 terminal sessions in the root of this repo.
 In one session run the back end in development mode
 
 ```sh
-npm start --prefix server
+cd server
+yarn start
 ```
 
 In the other start the development server for the front end.
 
 ```sh
-npm start --prefix client
+cd client
+yarn start
 ```
 
 At this point you should have both back end and front end development servers running.
@@ -91,10 +94,10 @@ ESLint and Prettier are used to enforce code patterns and formatting in this pro
 
 ```sh
 # To check lint
-npm run lint
+yarn run lint
 
 # To fix (some) errors and formatting automatically
-npm run fixlint
+yarn run fixlint
 ```
 
 ## Developing on Windows
@@ -117,12 +120,12 @@ The data in the database is somewhat nonsensical. It is also not randomized so t
 
 SQLPad's test cases focus on the API server, with majority of tests being integration tests, with some unit tests sprinkled throughout.
 
-Tests are located under `server/test` directory, and use `mocha` as a test runner. Tests may be run by running `npm test` within the server directory. For tests to run successfully, dependencies must be installed and the test database fixture generated.
+Tests are located under `server/test` directory, and use `mocha` as a test runner. Tests may be run by running `yarn test` within the server directory. For tests to run successfully, dependencies must be installed and the test database fixture generated.
 
 ```sh
 cd server
 # if dependencies have not yet been installed (build.sh will do this)
-npm ci
+yarn
 
 # If test fixture has not yet been generated (build.sh will do this)
 node generate-test-db-fixture.js
@@ -132,7 +135,7 @@ docker-compose up -d redis
 docker-compose up -d ldap
 
 # Run tests
-npm test
+yarn test
 
 # If you are aiming to run a specific test case,
 # you may do so using npx to call mocha,
@@ -140,12 +143,28 @@ npm test
 npx mocha test/path/to/file.js --exit
 ```
 
-## Releases
+## Building local docker images
 
-SQLPad tries to follow [semantic versioning](https://semver.org/). As an application, this primarily means breaking HTTP API changes, breaking configuration changes, or major UI design changes will result in a major version bump. Minor and patch version bumps will consist of enhancements and fixes.
+You can build and test the docker file by running the following from the root of the directory. Note that you must have Docker installed and running.
 
-For all enhancements, core SQLPad functionality should not be altered in any major way unless planned for an upcoming major release.
+```sh
+# build image from docker file
+# to build for a different architecture you can do
+# docker build -t localsqlpad . --no-cache=true --platform=linux/amd64
+docker build -t localsqlpad .
 
-The primary means of distributing SQLPad is via Docker Hub images. Images are automatically created off of git tags pushed to the repo matching the version format `v<major>.<minor>.<patch>`.
+# list images built
+docker images
 
-To simplify the creation of package.json version bumps and tag creation, the `scripts/version.sh` may be used to cut a new release. Make updates to `CHANGELOG.md` followed by running `scripts/versions.sh 3.4.5` (or whatever the version number may be).
+# Run localsqlpad image just built
+# https://docs.docker.com/engine/reference/run/
+docker run -p 3000:3000 -e "SQLPAD_ADMIN=admin@sqlpad.com" -e "SQLPAD_ADMIN_PASSWORD=admin" localsqlpad
+
+# Now in browser you can open sqlpad at http://localhost:3000
+```
+
+In the event that a specific architecture needs to be tested, say an amd64 image to run on arm64, you can pull a dockerhub image based on specific sha.
+
+```sh
+docker run -p 3000:3000 -e "SQLPAD_ADMIN=admin@sqlpad.com" -e "SQLPAD_ADMIN_PASSWORD=admin" sqlpad/sqlpad@sha256:b80b4ab2af32ed07479d9233327bf3e5352fc71b41245d8e73b6403361be266a
+```

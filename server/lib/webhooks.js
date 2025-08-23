@@ -1,5 +1,5 @@
-const fetch = require('node-fetch');
-const appLog = require('./app-log');
+import fetch from 'node-fetch';
+import appLog from './app-log.js';
 
 function userSummary(user) {
   if (!user) {
@@ -109,15 +109,8 @@ class Webhooks {
       return;
     }
 
-    const {
-      id,
-      name,
-      queryText,
-      tags,
-      chart,
-      createdByUser,
-      createdAt,
-    } = query;
+    const { id, name, queryText, tags, chart, createdByUser, createdAt } =
+      query;
 
     const body = {
       query: {
@@ -210,6 +203,30 @@ class Webhooks {
       appLog.error(error, 'error sending statement created webhook');
     }
   }
+
+  async statementCancelled(user, connection, batch, statementId) {
+    const url = this.hookEnabledUrl('webhookStatementCancelledUrl');
+    if (!url) {
+      return;
+    }
+
+    try {
+      const { statements, ...batchWithoutStatements } = batch;
+
+      const statement = await this.models.statements.findOneById(statementId);
+
+      const body = {
+        statement,
+        batch: batchWithoutStatements,
+        user: userSummary(user),
+        connection: connectionSummary(connection),
+      };
+
+      return this.send('statement_cancelled', url, body);
+    } catch (error) {
+      appLog.error(error, 'error sending statement cancelled webhook');
+    }
+  }
 }
 
-module.exports = Webhooks;
+export default Webhooks;

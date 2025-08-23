@@ -1,8 +1,9 @@
-require('../typedefs');
-const router = require('express').Router();
-const mustBeAdmin = require('../middleware/must-be-admin.js');
-const mustBeAuthenticated = require('../middleware/must-be-authenticated.js');
-const wrap = require('../lib/wrap');
+import '../typedefs.js';
+import mustBeAdmin from '../middleware/must-be-admin.js';
+import mustBeAuthenticated from '../middleware/must-be-authenticated.js';
+import wrap from '../lib/wrap.js';
+import express from 'express';
+const router = express.Router();
 
 /**
  * @param {Req} req
@@ -188,4 +189,4 @@ router.delete(
   wrap(disconnectConnectionClient)
 );
 
-module.exports = router;
+export default router;

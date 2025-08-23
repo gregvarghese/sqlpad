@@ -1,8 +1,10 @@
-require('../typedefs');
-const router = require('express').Router();
-const mustHaveConnectionAccess = require('../middleware/must-have-connection-access.js');
-const ConnectionClient = require('../lib/connection-client');
-const wrap = require('../lib/wrap');
+import '../typedefs.js';
+import compression from 'compression';
+import mustHaveConnectionAccess from '../middleware/must-have-connection-access.js';
+import ConnectionClient from '../lib/connection-client.js';
+import wrap from '../lib/wrap.js';
+import express from 'express';
+const router = express.Router();
 
 /**
  * @param {Req} req
@@ -42,10 +44,14 @@ async function getConnectionSchema(req, res) {
   return res.utils.data(schemaInfo);
 }
 
+// compression is added here becasue a big database server can have huge amount
+// of metadata and since this is not retrieved schema by schema 20mb+ would easily be possible in plain/text
+// on slow connections where a LB does not compress this can be a big bottleneck.
 router.get(
   '/api/connections/:connectionId/schema',
+  compression(),
   mustHaveConnectionAccess,
   wrap(getConnectionSchema)
 );
 
-module.exports = router;
+export default router;

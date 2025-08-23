@@ -9,6 +9,7 @@ import {
   ChartFields,
   Connection,
   ConnectionClient,
+  QueryResultFormat,
 } from '../types';
 import { api } from '../utilities/api';
 import { getHistory } from '../utilities/history';
@@ -64,8 +65,8 @@ setInterval(async () => {
         {}
       );
 
-      const currentConnectionClient = getState().getSession(sessionId)
-        ?.connectionClient;
+      const currentConnectionClient =
+        getState().getSession(sessionId)?.connectionClient;
 
       // If the connectionClient changed since hearbeat, do nothing
       if (
@@ -138,7 +139,7 @@ export const initEditor = async (
         const foundDefault = connections.find(
           (c) => c.id === defaultConnectionId
         );
-        if (Boolean(foundDefault)) {
+        if (foundDefault) {
           initialConnectionId = defaultConnectionId;
         }
       }
@@ -147,7 +148,7 @@ export const initEditor = async (
         const selectedConnection = connections.find(
           (c) => c.id === selectedConnectionId
         );
-        if (Boolean(selectedConnection)) {
+        if (selectedConnection) {
           initialConnectionId = selectedConnectionId;
         }
       }
@@ -195,6 +196,10 @@ export function setMouseOverResultPane(mouseOverResultPane: boolean) {
   setState({ mouseOverResultPane });
 }
 
+export function setQueryResultFormat(queryResultFormat: QueryResultFormat) {
+  setState({ queryResultFormat });
+}
+
 /**
  * Reset state (on signout for example)
  */
@@ -221,6 +226,10 @@ export async function connectConnectionClient() {
     (connection) => connection.id === connectionId
   );
 
+  if (connection) {
+    setAsynchronousDriver(connection.isAsynchronous);
+  }
+
   const supportedAndEnabled =
     connection &&
     connection.supportsConnectionClient &&
@@ -239,6 +248,7 @@ export async function connectConnectionClient() {
 
   setSession(focusedSessionId, {
     connectionClient: json.data,
+    isDriverAsynchronous: connection ? connection.isAsynchronous : false,
   });
 }
 
@@ -337,10 +347,8 @@ export const loadQuery = async (queryId: string) => {
   }
 
   const { focusedSessionId } = getState();
-  const {
-    connectionClient,
-    ...restOfCurrentSession
-  } = getState().getFocusedSession();
+  const { connectionClient, ...restOfCurrentSession } =
+    getState().getFocusedSession();
 
   // Cleanup existing connection
   // Even if the connection isn't changing, the client should be refreshed
@@ -386,6 +394,7 @@ export const runQuery = async () => {
     connectionId,
     connectionClient,
     selectedText,
+    isDriverAsynchronous,
   } = getState().getFocusedSession();
 
   if (!connectionId) {
@@ -405,6 +414,7 @@ export const runQuery = async () => {
   setSession(focusedSessionId, {
     batchId: undefined,
     isRunning: true,
+    isExecutionStarting: false,
     runQueryStartTime: new Date(),
     selectedStatementId: '',
   });
@@ -423,6 +433,11 @@ export const runQuery = async () => {
   };
 
   let res = await api.createBatch(postData);
+
+  setSession(focusedSessionId, {
+    isExecutionStarting: isDriverAsynchronous ? true : false,
+  });
+
   let error = res.error;
   let batch = res.data;
 
@@ -442,7 +457,12 @@ export const runQuery = async () => {
 
   while (
     batch?.id &&
-    !((batch?.status === 'finished' || batch?.status === 'error') && !error)
+    !(
+      (batch?.status === 'finished' ||
+        batch?.status === 'error' ||
+        batch?.status === 'cancelled') &&
+      !error
+    )
   ) {
     await sleep(500);
     res = await api.getBatch(batch.id);
@@ -461,6 +481,52 @@ export const runQuery = async () => {
 
   setSession(focusedSessionId, {
     isRunning: false,
+    isExecutionStarting: false,
+  });
+};
+
+export const cancelQuery = async () => {
+  const { focusedSessionId } = getState();
+  const { connectionId, isDriverAsynchronous, batchId } =
+    getState().getFocusedSession();
+
+  if (!isDriverAsynchronous) {
+    return setSession(focusedSessionId, {
+      queryError: 'Driver does not support cancellation',
+      selectedStatementId: '',
+    });
+  }
+
+  if (!batchId) {
+    return setSession(focusedSessionId, {
+      queryError: 'Batch ID required',
+      selectedStatementId: '',
+    });
+  }
+  if (!connectionId) {
+    return setSession(focusedSessionId, {
+      queryError: 'Connection required',
+      selectedStatementId: '',
+    });
+  }
+
+  setSession(focusedSessionId, {
+    isRunning: true,
+    isExecutionStarting: true,
+    runQueryStartTime: new Date(),
+    selectedStatementId: '',
+  });
+
+  const putData = {
+    connectionId: connectionId,
+  };
+
+  await api.cancelBatch(batchId, putData);
+  message.error('Query cancelled by user');
+  return setSession(focusedSessionId, {
+    batchId: undefined,
+    isRunning: false,
+    isExecutionStarting: false,
   });
 };
 
@@ -758,10 +824,32 @@ export async function loadSchema(connectionId: string, reload?: boolean) {
 
     // Pre-expand schemas
     const expanded: { [key: string]: boolean } = {};
-    if (data?.schemas) {
+    // Added schemas length restriction before auto-expand.
+    // This limit is there because there is no collapse-all function in the UI
+    // and render time can explode quickly.
+    // In datawarehousing there can be 100's of schema's each containing 50-100
+    // tables and those containing each 5+ columns and manually collapsing
+    // them is very annoying.
+    // NOTE: the 5 here is completely arbitrary it may be preferable to not auto expand unless there is only 1.
+    if (data?.schemas && data?.schemas.length <= 5) {
       data.schemas.forEach((schema) => {
         expanded[schema.name] = true;
       });
+    }
+
+    const stringCompare = new Intl.Collator('en', { sensitivity: 'base' });
+    const nameCompare: {
+      (a: { name: string }, b: { name: string }): number;
+    } = (a, b) => stringCompare.compare(a.name, b.name);
+    if (data?.schemas) {
+      data.schemas.sort(nameCompare);
+      data.schemas.forEach((schema) => {
+        schema.tables.sort(nameCompare);
+        // NOTE: we do not sort columns that can be annoying with regards to creation order.
+      });
+    }
+    if (data?.tables) {
+      data.tables.sort(nameCompare);
     }
 
     setSchemaState(connectionId, {
@@ -776,8 +864,8 @@ export async function loadSchema(connectionId: string, reload?: boolean) {
   }
 
   // Refresh completions
-  const connectionSchema = getState().schemaStates[connectionId]
-    ?.connectionSchema;
+  const connectionSchema =
+    getState().schemaStates[connectionId]?.connectionSchema;
 
   if (connectionSchema?.schemas || connectionSchema?.tables) {
     updateCompletions(connectionSchema);
@@ -795,5 +883,18 @@ export function toggleSchemaItem(connectionId: string, item: { id: string }) {
 
   setSession(focusedSessionId, {
     schemaExpansions: { ...schemaExpansions, [connectionId]: expanded },
+  });
+}
+
+/**
+ * Sets the state for an asynchronous driver that will enable cancel queries
+ * @param {boolean} setAsynchronousDriver
+ */
+export function setAsynchronousDriver(asynchronous?: boolean) {
+  const { focusedSessionId } = getState();
+
+  const isAsync = asynchronous ? true : false;
+  setSession(focusedSessionId, {
+    isDriverAsynchronous: isAsync,
   });
 }

@@ -88,7 +88,7 @@ function QueryListDrawer({ onClose, visible }: Props) {
     '/api/queries?' + queryString.stringify(params, { arrayFormat: 'bracket' });
 
   const getQueries = useCallback(
-    (url) => {
+    (url: string) => {
       setLoading(true);
       // This cannot use SWR at this time
       // as we need to use links and manage state
@@ -97,7 +97,7 @@ function QueryListDrawer({ onClose, visible }: Props) {
         setLoading(false);
         setError(error);
         if (links && links.next) {
-          setNext(links.next.url);
+          setNext(links.next);
         } else {
           setNext(null);
         }

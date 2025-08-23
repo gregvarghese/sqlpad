@@ -1,6 +1,6 @@
-const Sequelize = require('sequelize');
+import Sequelize from 'sequelize';
 
-module.exports = function (sequelize) {
+export default function (sequelize) {
   const Statements = sequelize.define(
     'Statements',
     {
@@ -63,6 +63,9 @@ module.exports = function (sequelize) {
         type: Sequelize.DATE,
         allowNull: false,
       },
+      executionId: {
+        type: Sequelize.STRING,
+      },
     },
     {
       tableName: 'statements',
@@ -71,4 +74,4 @@ module.exports = function (sequelize) {
   );
 
   return Statements;
-};
+}

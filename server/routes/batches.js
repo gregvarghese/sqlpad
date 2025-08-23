@@ -1,10 +1,12 @@
-require('../typedefs');
-const moment = require('moment');
-const router = require('express').Router();
-const mustBeAuthenticated = require('../middleware/must-be-authenticated.js');
-const executeBatch = require('../lib/execute-batch');
-const wrap = require('../lib/wrap');
-const mustHaveConnectionAccess = require('../middleware/must-have-connection-access.js');
+import '../typedefs.js';
+import moment from 'moment';
+import mustBeAuthenticated from '../middleware/must-be-authenticated.js';
+import { executeBatch, executeCancellableBatch } from '../lib/execute-batch.js';
+import { cancelBatch } from '../lib/cancel-batch.js';
+import wrap from '../lib/wrap.js';
+import mustHaveConnectionAccess from '../middleware/must-have-connection-access.js';
+import express from 'express';
+const router = express.Router();
 
 /**
  * Create batch
@@ -45,6 +47,15 @@ async function create(req, res) {
   // Run batch, but don't wait for it to send response
   // Client will get status via polling or perhaps some future event mechanism
   if (newBatch.status !== 'error') {
+    if (connection.isAsynchronous) {
+      // Wait for all execution IDs to be available for cancellation
+      await executeCancellableBatch(
+        config,
+        models,
+        webhooks,
+        newBatch.id
+      ).catch((error) => appLog.error(error));
+    }
     executeBatch(config, models, webhooks, newBatch.id).catch((error) =>
       appLog.error(error)
     );
@@ -108,7 +119,7 @@ async function batchToReq(req, res, next) {
       return res.utils.notFound();
     }
 
-    if (batch.userId !== user.id) {
+    if (batch.userId !== user.id.toString()) {
       return res.utils.forbidden();
     }
 
@@ -157,4 +168,43 @@ router.get(
   wrap(getBatchStatements)
 );
 
-module.exports = router;
+/**
+ * Cancel batch
+ * @param {Req} req
+ * @param {Res} res
+ */
+async function cancel(req, res) {
+  const { models, appLog, webhooks, body } = req;
+
+  const { connectionId } = body;
+
+  const id = req.params.batchId;
+
+  const connection = await models.connections.findOneById(connectionId);
+  const batch = await models.batches.findOneById(id);
+
+  if (batch.status !== 'error') {
+    if (!connection.isAsynchronous) {
+      return res.utils.error(
+        'Cancel batch is only available to drivers that support cancellation'
+      );
+    }
+
+    await cancelBatch(models, webhooks, batch.id).catch((error) =>
+      appLog.error(error)
+    );
+  }
+  const updatedBatch = await models.batches.findOneById(id);
+  appLog.trace(updatedBatch);
+  return res.utils.data(updatedBatch);
+}
+
+router.put(
+  '/api/batches/:batchId/cancel',
+  mustBeAuthenticated,
+  mustHaveConnectionAccess,
+  batchToReq,
+  wrap(cancel)
+);
+
+export default router;

@@ -1,6 +1,6 @@
-const { DataTypes } = require('sequelize');
+import { DataTypes } from 'sequelize';
 
-module.exports = function (sequelize) {
+export default function (sequelize) {
   const Batches = sequelize.define(
     'Batches',
     {
@@ -29,7 +29,7 @@ module.exports = function (sequelize) {
           // Potentially add 'cancelled'?
           // We have no way of canceling current statement but future could be
           // If a batch errors, any statements following error will be "cancelled" status
-          isIn: [['started', 'finished', 'error']],
+          isIn: [['started', 'finished', 'error', 'cancelled']],
         },
         defaultValue: 'started',
       },
@@ -78,4 +78,4 @@ module.exports = function (sequelize) {
   );
 
   return Batches;
-};
+}
